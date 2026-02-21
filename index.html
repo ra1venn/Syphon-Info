@@ -1,82 +1,336 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <title>Deadlock Builds</title>
+    <title>Syphon Builds</title>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --accent: #f0ad4e; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; }
-        .content { flex: 1; padding: 40px; }
-        .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
-        .item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #333; align-items: center; }
-        .link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
-        /* Panel */
-        .panel { position: fixed; right: -450px; top: 0; width: 400px; height: 100%; background: #1a1a1a; box-shadow: -10px 0 20px rgba(0,0,0,0.5); transition: 0.4s; padding: 25px; z-index: 1000; border-left: 3px solid var(--accent); box-sizing: border-box; overflow-y: auto; }
-        .panel.open { right: 0; }
-        .panel img { width: 100%; border-radius: 8px; margin-top: 20px; border: 1px solid #444; }
-        .close { cursor: pointer; float: right; font-size: 30px; color: #777; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 999; }
-        .overlay.active { display: block; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --bg: #0b0915;
+            --card: rgba(22, 19, 38, 0.8);
+            --accent: #b789ff;
+            --accent-gradient: linear-gradient(135deg, #b789ff 0%, #7c3aed 100%);
+            --text: #e2e1e9;
+            --text-dim: #94a3b8;
+            --border: rgba(183, 137, 255, 0.15);
+            --purple-deep: #2d1b4e;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% -20%, #2d1b4e 0%, #0b0915 70%);
+            background-attachment: fixed;
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(183, 137, 255, 0.05);
+        }
+
+        .header-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(183, 137, 255, 0.2);
+        }
+
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            fill: var(--accent);
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .copyable {
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            padding: 6px 14px;
+            background: rgba(183, 137, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(183, 137, 255, 0.1);
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .copyable:hover {
+            background: rgba(183, 137, 255, 0.25);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .panel {
+            position: fixed;
+            right: -500px;
+            top: 20px;
+            bottom: 20px;
+            width: 450px;
+            background: rgba(11, 9, 21, 0.95);
+            backdrop-filter: blur(200px);
+            box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 40px;
+            z-index: 1000;
+            border-radius: 30px 0 0 30px;
+            border-left: 1px solid var(--accent);
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .panel.open {
+            right: 0;
+        }
+
+        .panel img {
+            width: 100%;
+            border-radius: 20px;
+            margin-top: 24px;
+            border: 1px solid rgba(183, 137, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            cursor: pointer;
+            float: right;
+            font-size: 32px;
+            color: var(--text-dim);
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: var(--accent);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            z-index: 999;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--purple-deep);
+            color: var(--accent);
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            font-weight: 600;
+            z-index: 2000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Loader styles */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-bottom-color: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
+
 <body>
-<div class="overlay" id="overlay" onclick="closePanel()"></div>
-<div class="content">
-    <div class="container">
-        <h2 style="text-align: center; color: var(--accent);">Deadlock Builds</h2>
-        <div id="list"></div>
+
+    <div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+    <div class="content">
+        <div class="container" id="mainContainer">
+            <h2 class="header-title">Syphon Builds</h2>
+
+            <div id="loader" class="loader-container">
+                <span class="loader"></span>
+                <span class="loading-text">Загрузка билдов...</span>
+            </div>
+
+            <div id="list"></div>
+        </div>
     </div>
-</div>
-<div class="panel" id="panel">
-    <span class="close" onclick="closePanel()">&times;</span>
-    <h2 id="pTitle"></h2>
-    <div id="pImg"></div>
-</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <div class="panel" id="panel">
+        <span class="close" onclick="closePanel()">&times;</span>
+        <h2 id="pTitle"></h2>
+        <div id="pImg"></div>
+    </div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
-        authDomain: "site-56644.firebaseapp.com",
-        databaseURL: "https://site-56644-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "site-56644",
-        storageBucket: "site-56644.firebasestorage.app",
-        messagingSenderId: "741499230984",
-        appId: "1:741499230984:web:fae10fa2828ba53ff32abd",
-        measurementId: "G-TLE4GFJ95S"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    <div id="toast" class="toast">Скопировано!</div>
 
-    onValue(ref(db, 'builds'), (snapshot) => {
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-        const data = snapshot.val();
-        if (data) {
-            Object.values(data).reverse().forEach(b => {
-                const div = document.createElement('div');
-                div.className = 'item';
-                div.innerHTML = `<span>${b.name}</span> <span class="link" onclick="window.openPanel('${b.name}', '${b.img}')">Билд #${b.num}</span>`;
-                list.appendChild(div);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
+            authDomain: "site-56644.firebaseapp.com",
+            projectId: "site-56644",
+            databaseURL: "https://site-56644-default-rtdb.europe-west1.firebasedatabase.app",
+            storageBucket: "site-56644.appspot.com",
+            messagingSenderId: "741499230984",
+            appId: "1:741499230984:web:fae10fa2828ba53ff32abd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'builds'), (snapshot) => {
+            const list = document.getElementById('list');
+            const loader = document.getElementById('loader');
+            list.innerHTML = '';
+            loader.style.display = 'none';
+
+            const data = snapshot.val();
+            if (data) {
+                Object.values(data).reverse().forEach(b => {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    div.innerHTML = `
+                        <span>${b.name}</span>
+                        <div class="item-actions">
+                            <span class="copyable" onclick="copyToClipboard('${b.num}')">${b.num}</span>
+                            <svg class="icon-btn" onclick="window.openPanel('${b.name}', '${b.img}')" viewBox="0 0 24 24">
+                                <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+                            </svg>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } else {
+                list.innerHTML = '<div style="text-align:center; color: var(--text-dim); padding: 40px;">Билдов пока нет...</div>';
+            }
+        });
+
+        window.openPanel = (name, img) => {
+            document.getElementById('pTitle').innerText = name;
+            document.getElementById('pImg').innerHTML = `<img src="${img}">`;
+            document.getElementById('panel').classList.add('open');
+            document.getElementById('overlay').classList.add('active');
+        };
+
+        window.closePanel = () => {
+            document.getElementById('panel').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        };
+
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 1500);
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
             });
-        }
-    });
-
-    window.openPanel = (name, img) => {
-        document.getElementById('pTitle').innerText = name;
-        document.getElementById('pImg').innerHTML = `<img src="${img}">`;
-        document.getElementById('panel').classList.add('open');
-        document.getElementById('overlay').classList.add('active');
-    };
-    window.closePanel = () => {
-        document.getElementById('panel').classList.remove('open');
-        document.getElementById('overlay').classList.remove('active');
-    };
-</script>
+        };
+    </script>
 </body>
 
 </html>
-
