@@ -2,202 +2,121 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Deadlock Build Tracker</title>
+    <title>Deadlock Build Manager</title>
     <style>
-        :root {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --accent: #f0ad4e;
-            --text: #e0e0e0;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            overflow-x: hidden;
-        }
-
-        /* Основной контент */
-        .main-content {
-            flex: 1;
-            padding: 40px;
-            transition: margin-right 0.3s ease;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: var(--card);
-            padding: 25px;
-            border-radius: 15px;
-            border: 1px solid #333;
-        }
-
-        h1 { color: var(--accent); text-align: center; margin-bottom: 30px; }
-
-        .input-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input, button {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #2a2a2a;
-            color: white;
-            outline: none;
-        }
-
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #f0ad4e; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; }
+        .content { flex: 1; padding: 40px; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
+        .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        input, button { padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; outline: none; }
         input[type="file"] { grid-column: span 2; }
-
-        .add-btn {
-            grid-column: span 2;
-            background: var(--accent);
-            color: black;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-        }
-
-        .char-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #333;
-        }
-
-        .build-link {
-            color: var(--accent);
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: underline;
-            transition: 0.2s;
-        }
-
-        .build-link:hover { color: #ffc107; }
-
-        /* БОКОВАЯ ПАНЕЛЬ */
-        .side-panel {
-            position: fixed;
-            right: -400px; /* Скрыта по умолчанию */
-            top: 0;
-            width: 350px;
-            height: 100%;
-            background: #252525;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-            transition: right 0.3s ease-in-out;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            border-left: 2px solid var(--accent);
-        }
-
-        .side-panel.open {
-            right: 0;
-        }
-
-        .side-panel h2 { color: var(--accent); margin-top: 0; }
-
-        .side-panel img {
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 1px solid #444;
-        }
-
-        .close-panel {
-            align-self: flex-end;
-            cursor: pointer;
-            font-size: 24px;
-            color: #999;
-        }
-
-        /* Затемнение фона */
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: none;
-            z-index: 999;
-        }
+        .btn-add { grid-column: span 2; background: var(--accent); color: #000; font-weight: bold; border: none; cursor: pointer; }
+        .item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #333; align-items: center; }
+        .link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
+        
+        .panel { position: fixed; right: -450px; top: 0; width: 400px; height: 100%; background: #1a1a1a; box-shadow: -10px 0 20px rgba(0,0,0,0.5); transition: 0.4s; padding: 25px; z-index: 1000; border-left: 3px solid var(--accent); box-sizing: border-box; overflow-y: auto; }
+        .panel.open { right: 0; }
+        .panel img { width: 100%; border-radius: 8px; margin-top: 20px; border: 1px solid #444; }
+        .close { cursor: pointer; float: right; font-size: 30px; color: #777; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 999; }
         .overlay.active { display: block; }
     </style>
 </head>
 <body>
 
-<div class="overlay" id="overlay" onclick="closeBuild()"></div>
-
-<div class="main-content">
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="content">
     <div class="container">
-        <h1>Deadlock: Менеджер билдов</h1>
-        
-        <div class="input-group">
-            <input type="text" id="charName" placeholder="Герой (напр. Seven)">
-            <input type="text" id="buildNum" placeholder="Номер билда">
-            <input type="file" id="buildImg" accept="image/*">
-            <button class="add-btn" onclick="addCharacter()">Добавить в список</button>
+        <h2 style="text-align: center; color: var(--accent);">Deadlock Cloud (No-Card Edition)</h2>
+        <div class="inputs">
+            <input type="text" id="name" placeholder="Герой">
+            <input type="text" id="num" placeholder="№ билда">
+            <input type="file" id="file" accept="image/*">
+            <button class="btn-add" id="saveBtn" onclick="saveBuild()">Сохранить</button>
         </div>
-
-        <div id="characterList">
-            </div>
+        <div id="list"></div>
     </div>
 </div>
 
-<div class="side-panel" id="sidePanel">
-    <span class="close-panel" onclick="closeBuild()">×</span>
-    <h2 id="panelTitle">Сборка</h2>
-    <div id="imageContainer">
-        </div>
+<div class="panel" id="panel">
+    <span class="close" onclick="closePanel()">&times;</span>
+    <h2 id="pTitle"></h2>
+    <div id="pImg"></div>
 </div>
 
-<script>
-    function addCharacter() {
-        const name = document.getElementById('charName').value;
-        const num = document.getElementById('buildNum').value;
-        const fileInput = document.getElementById('buildImg');
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        if (!name || !num || !fileInput.files[0]) {
-            alert("Заполни все данные!"); return;
+    // Данные из твоего скриншота
+    const firebaseConfig = {
+        apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
+        authDomain: "site-56644.firebaseapp.com",
+        projectId: "site-56644",
+        databaseURL: "https://site-56644-default-rtdb.europe-west1.firebasedatabase.app",
+        storageBucket: "site-56644.appspot.com",
+        messagingSenderId: "741499230984",
+        appId: "1:741499230984:web:fae10fa2828ba53ff32abd"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Подгрузка списка (теперь из Realtime DB)
+    onValue(ref(db, 'builds'), (snapshot) => {
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        const data = snapshot.val();
+        if (data) {
+            Object.values(data).reverse().forEach(b => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerHTML = `<span>${b.name}</span> <span class="link" onclick="window.openPanel('${b.name}', '${b.img}')">Билд #${b.num}</span>`;
+                list.appendChild(div);
+            });
         }
+    });
+
+    // Сохранение картинки как текста (Base64)
+    window.saveBuild = async () => {
+        const name = document.getElementById('name').value;
+        const num = document.getElementById('num').value;
+        const file = document.getElementById('file').files[0];
+        const btn = document.getElementById('saveBtn');
+
+        if (!name || !num || !file) return alert("Заполни всё!");
+
+        btn.disabled = true;
+        btn.innerText = "Кодирование...";
 
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const imgSrc = e.target.result;
-            const list = document.getElementById('characterList');
-            
-            const div = document.createElement('div');
-            div.className = 'char-item';
-            div.innerHTML = `
-                <span>${name}</span>
-                <span class="build-link" onclick="openBuild('${name}', '${imgSrc}')">Сборка #${num}</span>
-            `;
-            list.appendChild(div);
-
-            // Очистка
-            document.getElementById('charName').value = '';
-            document.getElementById('buildNum').value = '';
-            document.getElementById('buildImg').value = '';
+        reader.onload = async (e) => {
+            const base64Img = e.target.result;
+            try {
+                await push(ref(db, 'builds'), { name, num, img: base64Img, date: Date.now() });
+                alert("Готово!");
+            } catch (err) {
+                alert("Ошибка! Проверь, включил ли ты Realtime Database в консоли.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Сохранить";
+            }
         };
-        reader.readAsDataURL(fileInput.files[0]);
-    }
+        reader.readAsDataURL(file);
+    };
 
-    function openBuild(name, imgSrc) {
-        document.getElementById('panelTitle').innerText = "Сборка: " + name;
-        document.getElementById('imageContainer').innerHTML = `<img src="${imgSrc}">`;
-        document.getElementById('sidePanel').classList.add('open');
+    window.openPanel = (name, img) => {
+        document.getElementById('pTitle').innerText = name;
+        document.getElementById('pImg').innerHTML = `<img src="${img}">`;
+        document.getElementById('panel').classList.add('open');
         document.getElementById('overlay').classList.add('active');
-    }
+    };
+</script>
 
-    function closeBuild() {
-        document.getElementById('sidePanel').classList.remove('open');
+<script>
+    function closePanel() {
+        document.getElementById('panel').classList.remove('open');
         document.getElementById('overlay').classList.remove('active');
     }
 </script>
