@@ -2,30 +2,15 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Deadlock Build Manager</title>
+    <title>Deadlock Builds</title>
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --accent: #f0ad4e; --text: #e0e0e0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; }
         .content { flex: 1; padding: 40px; }
         .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
-        
-        /* Панель админа (скрыта по умолчанию) */
-        #adminPanel { display: none; background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed var(--accent); }
-        .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        /* Логин панель (скрыта по умолчанию) */
-        #loginPanel { display: none; margin-bottom: 20px; background: #252525; padding: 15px; border-radius: 8px; }
-        
-        input, button { padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; outline: none; width: 100%; box-sizing: border-box; margin-bottom: 5px; }
-        input[type="file"] { grid-column: span 2; }
-        .btn-add { grid-column: span 2; background: var(--accent); color: #000; font-weight: bold; border: none; cursor: pointer; }
-        .btn-login { background: #4caf50; color: white; font-weight: bold; cursor: pointer; border: none; }
-        .btn-logout { background: #f44336; color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; }
-        
         .item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #333; align-items: center; }
         .link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
-        .header-title { text-align: center; color: var(--accent); cursor: pointer; user-select: none; }
-        
+        /* Panel */
         .panel { position: fixed; right: -450px; top: 0; width: 400px; height: 100%; background: #1a1a1a; box-shadow: -10px 0 20px rgba(0,0,0,0.5); transition: 0.4s; padding: 25px; z-index: 1000; border-left: 3px solid var(--accent); box-sizing: border-box; overflow-y: auto; }
         .panel.open { right: 0; }
         .panel img { width: 100%; border-radius: 8px; margin-top: 20px; border: 1px solid #444; }
@@ -35,33 +20,13 @@
     </style>
 </head>
 <body>
-
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="content">
     <div class="container">
-        <h2 class="header-title" ondblclick="toggleLogin()">Deadlock Cloud</h2>
-        
-        <div id="loginPanel">
-            <input type="email" id="email" placeholder="Email админа">
-            <input type="password" id="pass" placeholder="Пароль">
-            <button class="btn-login" onclick="login()">Войти</button>
-        </div>
-
-        <div id="adminPanel">
-            <h3 style="margin-top:0; color:var(--accent);">Добавить билд</h3>
-            <div class="inputs">
-                <input type="text" id="name" placeholder="Герой">
-                <input type="text" id="num" placeholder="№ билда">
-                <input type="file" id="file" accept="image/*">
-                <button class="btn-add" id="saveBtn" onclick="saveBuild()">Сохранить</button>
-            </div>
-            <button class="btn-logout" onclick="logout()">Выйти из админки</button>
-        </div>
-
+        <h2 style="text-align: center; color: var(--accent);">Deadlock Builds</h2>
         <div id="list"></div>
     </div>
 </div>
-
 <div class="panel" id="panel">
     <span class="close" onclick="closePanel()">&times;</span>
     <h2 id="pTitle"></h2>
@@ -70,46 +35,12 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    // ДОБАВИЛИ МОДУЛИ АВТОРИЗАЦИИ
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
-        authDomain: "site-56644.firebaseapp.com",
-        projectId: "site-56644",
-        databaseURL: "https://site-56644-default-rtdb.europe-west1.firebasedatabase.app",
-        storageBucket: "site-56644.appspot.com",
-        messagingSenderId: "741499230984",
-        appId: "1:741499230984:web:fae10fa2828ba53ff32abd"
-    };
-
+    const firebaseConfig = { /* ТВОЙ КОНФИГ */ };
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app);
 
-    // Следим за тем, вошел админ или нет
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            document.getElementById('adminPanel').style.display = 'block';
-            document.getElementById('loginPanel').style.display = 'none';
-        } else {
-            document.getElementById('adminPanel').style.display = 'none';
-        }
-    });
-
-    // Авторизация
-    window.login = () => {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pass').value;
-        signInWithEmailAndPassword(auth, e, p)
-            .then(() => alert("Вы вошли как Админ!"))
-            .catch(err => alert("Ошибка входа: " + err.message));
-    };
-
-    window.logout = () => signOut(auth);
-
-    // Подгрузка списка (Доступна всем)
     onValue(ref(db, 'builds'), (snapshot) => {
         const list = document.getElementById('list');
         list.innerHTML = '';
@@ -124,53 +55,16 @@
         }
     });
 
-    // Сохранение (Работает только если авторизован)
-    window.saveBuild = async () => {
-        const name = document.getElementById('name').value;
-        const num = document.getElementById('num').value;
-        const file = document.getElementById('file').files[0];
-        const btn = document.getElementById('saveBtn');
-
-        if (!name || !num || !file) return alert("Заполни всё!");
-
-        btn.disabled = true;
-        btn.innerText = "Кодирование...";
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const base64Img = e.target.result;
-            try {
-                await push(ref(db, 'builds'), { name, num, img: base64Img, date: Date.now() });
-                alert("Готово!");
-            } catch (err) {
-                alert("Ошибка! У тебя нет прав админа.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Сохранить";
-            }
-        };
-        reader.readAsDataURL(file);
-    };
-
     window.openPanel = (name, img) => {
         document.getElementById('pTitle').innerText = name;
         document.getElementById('pImg').innerHTML = `<img src="${img}">`;
         document.getElementById('panel').classList.add('open');
         document.getElementById('overlay').classList.add('active');
     };
-</script>
-
-<script>
-    function closePanel() {
+    window.closePanel = () => {
         document.getElementById('panel').classList.remove('open');
         document.getElementById('overlay').classList.remove('active');
-    }
-    // Показать/скрыть логин по двойному клику
-    function toggleLogin() {
-        const p = document.getElementById('loginPanel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    }
+    };
 </script>
-
 </body>
 </html>
