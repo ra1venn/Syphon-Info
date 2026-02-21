@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Syphon Builds</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
@@ -429,11 +430,55 @@
         }
 
         .loading-text {
-            margin-top: 16px;
+            margin-top: 12px;
             color: var(--text-dim);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 1px;
             text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .header-subtitle a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-bottom: 1px solid rgba(183, 137, 255, 0.2);
+        }
+
+        .header-subtitle a:hover {
+            color: white;
+            border-bottom-color: var(--accent);
+        }
+
+        .header-separator {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 0 auto 40px auto;
+            border-radius: 10px;
+            opacity: 0.5;
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .search-highlight {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
+            font-weight: 700;
+            transition: all 1s ease;
+        }
+
+        .search-highlight.fade-out {
+            color: inherit;
+            text-shadow: none;
         }
     </style>
 </head>
@@ -451,6 +496,12 @@
     <div class="content">
         <div class="container" id="mainContainer">
             <h2 class="header-title">Syphon Builds</h2>
+            <p class="header-subtitle">
+                Builds are based on SyphonBullets’ <a href="https://www.youtube.com/@syphonbullets"
+                    target="_blank">guides</a> and <a href="https://www.twitch.tv/syphon_bullets"
+                    target="_blank">streams</a>
+            </p>
+            <div class="header-separator"></div>
 
             <div id="loader" class="loader-container">
                 <span class="loader"></span>
@@ -461,7 +512,7 @@
                 <h3 style="color: var(--accent); margin-bottom: 15px; margin-top: 30px;">SyphonBullets' builds</h3>
                 <div id="list-official"></div>
 
-                <h3 style="color: var(--text-dim); margin-bottom: 15px; margin-top: 40px;">Community/unofficial builds
+                <h3 style="color: var(--accent); margin-bottom: 15px; margin-top: 40px;">Community/unofficial builds
                 </h3>
                 <div id="list-community"></div>
             </div>
@@ -507,19 +558,19 @@
 
             const data = snapshot.val();
             if (data) {
-                // Группировка данных
+                // Группировка данных (по имени И категории)
                 const grouped = {};
                 Object.entries(data).forEach(([id, val]) => {
-                    const nameKey = val.name.toLowerCase();
-                    if (!grouped[nameKey]) {
-                        grouped[nameKey] = {
+                    const groupKey = `${val.name.toLowerCase()}_${val.category}`;
+                    if (!grouped[groupKey]) {
+                        grouped[groupKey] = {
                             id: id,
                             name: val.name,
                             category: val.category,
-                            builds: val.variants ? Object.entries(val.variants).map(([vid, v]) => ({ ...v, id: vid })) : [{ num: val.num, img: val.img, id: id }]
+                            builds: val.variants ? Object.entries(val.variants).map(([vid, v]) => ({ ...v, id: vid })) : [{ num: val.num, img: val.img, desc: val.desc, id: id }]
                         };
                     } else if (!val.variants) {
-                        grouped[nameKey].builds.push({ num: val.num, img: val.img, id: id });
+                        grouped[groupKey].builds.push({ num: val.num, img: val.img, desc: val.desc, id: id });
                     }
                 });
 
@@ -532,36 +583,54 @@
                     const hasMultiple = char.builds.length > 1;
 
                     div.innerHTML = `
-                        <div class="item-header" onclick="${hasMultiple ? 'this.parentElement.classList.toggle(\'expanded\')' : ''}">
+                        <div class="item-header">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-weight: 600;">${char.name}</span>
+                                <span class="char-name" style="font-weight: 600;" data-original="${char.name}">${char.name}</span>
                                 ${hasMultiple ? '<svg class="arrow-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>' : ''}
                             </div>
                             <div class="item-actions">
                                 ${!hasMultiple ? `
                                     <span class="copyable" onclick="event.stopPropagation(); copyToClipboard('${char.builds[0].num}')">${char.builds[0].num}</span>
-                                    <svg class="icon-btn" onclick="event.stopPropagation(); window.openPanel('${char.name}', '${char.builds[0].img}', '${char.builds[0].desc || ''}')" viewBox="0 0 24 24">
+                                    <svg class="icon-btn view-btn" viewBox="0 0 24 24">
                                         <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
                                     </svg>
                                 ` : `<span style="color: var(--text-dim); font-size: 0.8rem; background: rgba(183, 137, 255, 0.1); padding: 4px 8px; border-radius: 6px;">${char.builds.length} билда</span>`}
                             </div>
                         </div>
-                        ${hasMultiple ? `
-                            <div class="sub-variants">
-                                ${char.builds.map(b => `
-                                    <div class="sub-item">
-                                        <span style="font-size: 0.9rem; color: var(--text-dim);">Build ID:</span>
-                                        <div class="item-actions">
-                                            <span class="copyable" onclick="copyToClipboard('${b.num}')">${b.num}</span>
-                                            <svg class="icon-btn" onclick="window.openPanel('${char.name} #${b.num}', '${b.img}', '${b.desc || ''}')" viewBox="0 0 24 24" style="width: 18px;">
-                                                <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
                     `;
+
+                    const header = div.querySelector('.item-header');
+                    if (hasMultiple) {
+                        header.onclick = () => div.classList.toggle('expanded');
+                        const variantsContainer = document.createElement('div');
+                        variantsContainer.className = 'sub-variants';
+                        char.builds.forEach(b => {
+                            const subItemNode = document.createElement('div');
+                            subItemNode.className = 'sub-item';
+                            subItemNode.innerHTML = `
+                                <span style="font-size: 0.9rem; color: var(--text-dim);">Build ID:</span>
+                                <div class="item-actions">
+                                    <span class="copyable" onclick="copyToClipboard('${b.num}')">${b.num}</span>
+                                    <svg class="icon-btn view-btn" viewBox="0 0 24 24" style="width: 18px;">
+                                        <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+                                    </svg>
+                                </div>
+                            `;
+                            const viewSvg = subItemNode.querySelector('.view-btn');
+                            if (viewSvg) viewSvg.onclick = () => window.openPanel(`${char.name} #${b.num}`, b.img, b.desc || '');
+                            variantsContainer.appendChild(subItemNode);
+                        });
+                        div.appendChild(variantsContainer);
+                    } else {
+                        const b = char.builds[0];
+                        const viewBtn = div.querySelector('.view-btn');
+                        if (viewBtn) {
+                            viewBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                window.openPanel(char.name, b.img, b.desc || '');
+                            };
+                        }
+                    }
 
                     if (char.category === 'community') {
                         listComm.appendChild(div);
@@ -620,14 +689,14 @@
 
             if (content && spacer) {
                 // Двигаем весь контент плавно
-                content.style.transform = `translateY(${-currentScroll}px)`;
+                content.style.transform = `translateY(${- currentScroll}px)`;
                 // Обновляем высоту проставки
                 spacer.style.height = content.offsetHeight + 'px';
             }
 
             if (banner) {
                 // Баннер двигается с параллаксом
-                banner.style.transform = `translateY(${-currentScroll * 0.6}px)`;
+                banner.style.transform = `translateY(${- currentScroll * 0.6}px)`;
             }
             requestAnimationFrame(smoothScroll);
         }
@@ -649,13 +718,24 @@
                 text.innerText = searchBuffer;
                 hint.classList.add('active');
 
+                // Сначала сбрасываем все подсветки
+                document.querySelectorAll('.char-name').forEach(span => {
+                    span.innerHTML = span.getAttribute('data-original');
+                });
+
                 const items = document.querySelectorAll('.item');
                 for (const item of items) {
-                    const name = item.querySelector('span').innerText.toLowerCase();
-                    if (name.startsWith(searchBuffer)) {
+                    const span = item.querySelector('.char-name');
+                    const originalName = span.getAttribute('data-original');
+                    if (originalName.toLowerCase().startsWith(searchBuffer)) {
+                        // Подсвечиваем совпадение
+                        const match = originalName.substring(0, searchBuffer.length);
+                        const rest = originalName.substring(searchBuffer.length);
+                        span.innerHTML = `<span class="search-highlight">${match}</span>${rest}`;
+
                         const rect = item.getBoundingClientRect();
                         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                        const targetY = rect.top + scrollTop - 200; // 200px от верха для красоты
+                        const targetY = rect.top + scrollTop - 200;
 
                         window.scrollTo({
                             top: targetY,
@@ -665,8 +745,16 @@
                     }
                 }
                 searchTimeout = setTimeout(() => {
-                    searchBuffer = "";
-                    hint.classList.remove('active');
+                    // Анимация затухания
+                    document.querySelectorAll('.search-highlight').forEach(h => h.classList.add('fade-out'));
+
+                    setTimeout(() => {
+                        searchBuffer = "";
+                        hint.classList.remove('active');
+                        document.querySelectorAll('.char-name').forEach(span => {
+                            span.innerHTML = span.getAttribute('data-original');
+                        });
+                    }, 1000); // Совпадает с CSS
                 }, 1000);
             }
         });
