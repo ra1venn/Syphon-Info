@@ -7,6 +7,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         :root {
             --bg: #0b0915;
             --card: rgba(22, 19, 38, 0.8);
@@ -20,19 +24,44 @@
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at 50% -20%, #2d1b4e 0%, #0b0915 70%);
-            background-attachment: fixed;
+            background: var(--bg);
             color: var(--text);
             margin: 0;
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .builds-banner {
+            position: fixed;
+            /* Отвязываем от прыжков скролла */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 650px;
+            background-image: linear-gradient(to bottom, rgba(11, 9, 21, 0) 0%, var(--bg) 100%), url('banner.png');
+            background-size: cover;
+            background-position: center 20%;
+            z-index: 0;
+            will-change: transform;
+            pointer-events: none;
         }
 
         .content {
-            flex: 1;
-            padding: 40px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 500px 20px 40px 20px;
             display: flex;
             justify-content: center;
+            z-index: 1;
+            will-change: transform;
+        }
+
+        #scroll-spacer {
+            width: 1px;
+            pointer-events: none;
         }
 
         .container {
@@ -62,26 +91,72 @@
 
         .item {
             display: flex;
-            justify-content: space-between;
-            padding: 20px;
+            flex-direction: column;
             background: rgba(255, 255, 255, 0.03);
             margin-bottom: 12px;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            transition: all 0.3s ease;
+            padding: 16px 20px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .item:hover {
-            transform: translateX(5px);
             background: rgba(255, 255, 255, 0.05);
             border-color: rgba(183, 137, 255, 0.2);
+        }
+
+        .sub-variants {
+            display: none;
+            padding: 0 20px 16px 20px;
+            border-top: 1px solid rgba(183, 137, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .item.expanded .sub-variants {
+            display: block;
+        }
+
+        .sub-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .sub-item:last-child {
+            border-bottom: none;
+        }
+
+        .arrow-icon {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-dim);
+            transition: transform 0.3s;
+        }
+
+        .item.expanded .arrow-icon {
+            transform: rotate(180deg);
+            fill: var(--accent);
         }
 
         .item-actions {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
+            justify-content: flex-end;
+            min-width: 140px;
+            /* Немного меньше, так как нет кнопки удаления */
         }
 
         .icon-btn {
@@ -102,12 +177,15 @@
             color: var(--text);
             cursor: pointer;
             font-weight: 600;
-            padding: 6px 14px;
+            padding: 6px 4px;
             background: rgba(183, 137, 255, 0.1);
             border-radius: 8px;
             border: 1px solid rgba(183, 137, 255, 0.1);
             transition: all 0.2s;
             font-size: 0.85rem;
+            min-width: 80px;
+            text-align: center;
+            display: inline-block;
         }
 
         .copyable:hover {
@@ -198,6 +276,128 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* Search Hint */
+        .search-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(11, 9, 21, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .search-hint.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        .search-hint span {
+            color: white;
+            margin-left: 8px;
+        }
+
+        .panel-desc {
+            margin-top: 25px;
+            padding: 24px 30px;
+            background: rgba(183, 137, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(183, 137, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            display: none;
+            position: relative;
+            font-style: italic;
+        }
+
+        .panel-desc::before {
+            content: '“';
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.3;
+            font-family: "Georgia", serif;
+            line-height: 1;
+        }
+
+        .panel-desc::after {
+            content: '”';
+            position: absolute;
+            bottom: -15px;
+            right: 15px;
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.3;
+            font-family: "Georgia", serif;
+            line-height: 1;
+        }
+
+        .panel-desc.active {
+            display: block;
+        }
+
+        /* Fullscreen Viewer */
+        .fullscreen-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .fullscreen-viewer.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .fullscreen-viewer img {
+            max-width: 95%;
+            max-height: 95%;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fullscreen-viewer.active img {
+            transform: scale(1);
+        }
+
+        .panel img {
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+
+        .panel img:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
         /* Loader styles */
         .loader-container {
             display: flex;
@@ -240,7 +440,13 @@
 
 <body>
 
+    <div class="builds-banner"></div>
+    <div id="scroll-spacer"></div>
+    <div id="searchHint" class="search-hint">Поиск: <span id="searchText"></span></div>
     <div class="overlay" id="overlay" onclick="closePanel()"></div>
+    <div class="fullscreen-viewer" id="fullscreenViewer" onclick="closeFullscreen()">
+        <img id="fsImg" src="">
+    </div>
 
     <div class="content">
         <div class="container" id="mainContainer">
@@ -266,6 +472,7 @@
         <span class="close" onclick="closePanel()">&times;</span>
         <h2 id="pTitle"></h2>
         <div id="pImg"></div>
+        <div id="pDesc" class="panel-desc"></div>
     </div>
 
     <div id="toast" class="toast">Скопировано!</div>
@@ -300,20 +507,63 @@
 
             const data = snapshot.val();
             if (data) {
-                Object.values(data).reverse().forEach(b => {
+                // Группировка данных
+                const grouped = {};
+                Object.entries(data).forEach(([id, val]) => {
+                    const nameKey = val.name.toLowerCase();
+                    if (!grouped[nameKey]) {
+                        grouped[nameKey] = {
+                            id: id,
+                            name: val.name,
+                            category: val.category,
+                            builds: val.variants ? Object.entries(val.variants).map(([vid, v]) => ({ ...v, id: vid })) : [{ num: val.num, img: val.img, id: id }]
+                        };
+                    } else if (!val.variants) {
+                        grouped[nameKey].builds.push({ num: val.num, img: val.img, id: id });
+                    }
+                });
+
+                const sorted = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
+
+                sorted.forEach(char => {
                     const div = document.createElement('div');
                     div.className = 'item';
+
+                    const hasMultiple = char.builds.length > 1;
+
                     div.innerHTML = `
-                        <span>${b.name}</span>
-                        <div class="item-actions">
-                            <span class="copyable" onclick="copyToClipboard('${b.num}')">${b.num}</span>
-                            <svg class="icon-btn" onclick="window.openPanel('${b.name}', '${b.img}')" viewBox="0 0 24 24">
-                                <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
-                            </svg>
+                        <div class="item-header" onclick="${hasMultiple ? 'this.parentElement.classList.toggle(\'expanded\')' : ''}">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-weight: 600;">${char.name}</span>
+                                ${hasMultiple ? '<svg class="arrow-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>' : ''}
+                            </div>
+                            <div class="item-actions">
+                                ${!hasMultiple ? `
+                                    <span class="copyable" onclick="event.stopPropagation(); copyToClipboard('${char.builds[0].num}')">${char.builds[0].num}</span>
+                                    <svg class="icon-btn" onclick="event.stopPropagation(); window.openPanel('${char.name}', '${char.builds[0].img}', '${char.builds[0].desc || ''}')" viewBox="0 0 24 24">
+                                        <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+                                    </svg>
+                                ` : `<span style="color: var(--text-dim); font-size: 0.8rem; background: rgba(183, 137, 255, 0.1); padding: 4px 8px; border-radius: 6px;">${char.builds.length} билда</span>`}
+                            </div>
                         </div>
+                        ${hasMultiple ? `
+                            <div class="sub-variants">
+                                ${char.builds.map(b => `
+                                    <div class="sub-item">
+                                        <span style="font-size: 0.9rem; color: var(--text-dim);">Build ID:</span>
+                                        <div class="item-actions">
+                                            <span class="copyable" onclick="copyToClipboard('${b.num}')">${b.num}</span>
+                                            <svg class="icon-btn" onclick="window.openPanel('${char.name} #${b.num}', '${b.img}', '${b.desc || ''}')" viewBox="0 0 24 24" style="width: 18px;">
+                                                <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     `;
 
-                    if (b.category === 'community') {
+                    if (char.category === 'community') {
                         listComm.appendChild(div);
                     } else {
                         listOff.appendChild(div);
@@ -324,17 +574,102 @@
             }
         });
 
-        window.openPanel = (name, img) => {
+        window.openPanel = (name, img, desc) => {
             document.getElementById('pTitle').innerText = name;
-            document.getElementById('pImg').innerHTML = `<img src="${img}">`;
+            document.getElementById('pImg').innerHTML = `<img src="${img}" onclick="openFullscreen('${img}')">`;
+
+            const pDesc = document.getElementById('pDesc');
+            if (desc) {
+                pDesc.innerText = desc;
+                pDesc.classList.add('active');
+            } else {
+                pDesc.classList.remove('active');
+            }
+
             document.getElementById('panel').classList.add('open');
             document.getElementById('overlay').classList.add('active');
+        };
+
+        window.openFullscreen = (src) => {
+            const viewer = document.getElementById('fullscreenViewer');
+            document.getElementById('fsImg').src = src;
+            viewer.classList.add('active');
+        };
+
+        window.closeFullscreen = () => {
+            document.getElementById('fullscreenViewer').classList.remove('active');
         };
 
         window.closePanel = () => {
             document.getElementById('panel').classList.remove('open');
             document.getElementById('overlay').classList.remove('active');
         };
+
+        // Плавный Параллакс и Скролл
+        let currentScroll = 0;
+        let targetScroll = 0;
+        const ease = 0.07;
+
+        function smoothScroll() {
+            targetScroll = window.pageYOffset;
+            currentScroll += (targetScroll - currentScroll) * ease;
+
+            const banner = document.querySelector('.builds-banner');
+            const content = document.querySelector('.content');
+            const spacer = document.getElementById('scroll-spacer');
+
+            if (content && spacer) {
+                // Двигаем весь контент плавно
+                content.style.transform = `translateY(${-currentScroll}px)`;
+                // Обновляем высоту проставки
+                spacer.style.height = content.offsetHeight + 'px';
+            }
+
+            if (banner) {
+                // Баннер двигается с параллаксом
+                banner.style.transform = `translateY(${-currentScroll * 0.6}px)`;
+            }
+            requestAnimationFrame(smoothScroll);
+        }
+        smoothScroll();
+
+        // Быстрый поиск при печати
+        let searchBuffer = "";
+        let searchTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.ctrlKey || e.altKey || e.metaKey) return;
+
+            if (e.key.length === 1) {
+                clearTimeout(searchTimeout);
+                searchBuffer += e.key.toLowerCase();
+
+                const hint = document.getElementById('searchHint');
+                const text = document.getElementById('searchText');
+                text.innerText = searchBuffer;
+                hint.classList.add('active');
+
+                const items = document.querySelectorAll('.item');
+                for (const item of items) {
+                    const name = item.querySelector('span').innerText.toLowerCase();
+                    if (name.startsWith(searchBuffer)) {
+                        const rect = item.getBoundingClientRect();
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                        const targetY = rect.top + scrollTop - 200; // 200px от верха для красоты
+
+                        window.scrollTo({
+                            top: targetY,
+                            behavior: 'smooth'
+                        });
+                        break;
+                    }
+                }
+                searchTimeout = setTimeout(() => {
+                    searchBuffer = "";
+                    hint.classList.remove('active');
+                }, 1000);
+            }
+        });
 
         window.copyToClipboard = (text) => {
             navigator.clipboard.writeText(text).then(() => {
