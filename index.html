@@ -251,7 +251,14 @@
                 <span class="loading-text">Загрузка билдов...</span>
             </div>
 
-            <div id="list"></div>
+            <div id="listsContainer" style="display: none;">
+                <h3 style="color: var(--accent); margin-bottom: 15px; margin-top: 30px;">SyphonBullets' builds</h3>
+                <div id="list-official"></div>
+
+                <h3 style="color: var(--text-dim); margin-bottom: 15px; margin-top: 40px;">Community/unofficial builds
+                </h3>
+                <div id="list-community"></div>
+            </div>
         </div>
     </div>
 
@@ -281,10 +288,15 @@
         const db = getDatabase(app);
 
         onValue(ref(db, 'builds'), (snapshot) => {
-            const list = document.getElementById('list');
+            const listOff = document.getElementById('list-official');
+            const listComm = document.getElementById('list-community');
             const loader = document.getElementById('loader');
-            list.innerHTML = '';
+            const container = document.getElementById('listsContainer');
+
+            listOff.innerHTML = '';
+            listComm.innerHTML = '';
             loader.style.display = 'none';
+            container.style.display = 'block';
 
             const data = snapshot.val();
             if (data) {
@@ -300,10 +312,15 @@
                             </svg>
                         </div>
                     `;
-                    list.appendChild(div);
+
+                    if (b.category === 'community') {
+                        listComm.appendChild(div);
+                    } else {
+                        listOff.appendChild(div);
+                    }
                 });
             } else {
-                list.innerHTML = '<div style="text-align:center; color: var(--text-dim); padding: 40px;">Билдов пока нет...</div>';
+                listOff.innerHTML = '<div style="text-align:center; color: var(--text-dim); padding: 20px;">Билдов пока нет...</div>';
             }
         });
 

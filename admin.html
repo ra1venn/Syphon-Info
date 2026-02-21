@@ -456,6 +456,12 @@
                     <input type="text" id="name" placeholder="Герой">
                     <input type="text" id="num" placeholder="Номер билда">
 
+                    <select id="category"
+                        style="grid-column: span 2; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 12, 28, 0.6); color: white; outline: none; appearance: none; cursor: pointer;">
+                        <option value="official">SyphonBullets' builds</option>
+                        <option value="community">Community/unofficial builds</option>
+                    </select>
+
                     <div class="upload-area" id="uploadArea" onclick="document.getElementById('file').click()">
                         <svg viewBox="0 0 24 24">
                             <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
@@ -475,12 +481,19 @@
 
             <!-- Общий список (Доступен всем) -->
             <div id="buildsListSection">
-                <h3 style="color: var(--accent); margin-bottom: 10px;">Список билдов</h3>
                 <div id="loader-list" class="loader-container">
                     <span class="loader"></span>
                     <span class="loading-text">Загрузка билдов...</span>
                 </div>
-                <div id="list"></div>
+
+                <div id="listsContainer" style="display: none;">
+                    <h3 style="color: var(--accent); margin-bottom: 15px; margin-top: 30px;">SyphonBullets' builds</h3>
+                    <div id="list-official"></div>
+
+                    <h3 style="color: var(--text-dim); margin-bottom: 15px; margin-top: 40px;">Community/unofficial
+                        builds</h3>
+                    <div id="list-community"></div>
+                </div>
 
                 <button class="btn-logout" id="logoutBtn" style="display: none;" onclick="logout()">Выйти из
                     панели</button>
@@ -572,10 +585,15 @@
 
         // Подгрузка списка
         onValue(ref(db, 'builds'), (snapshot) => {
-            const list = document.getElementById('list');
+            const listOff = document.getElementById('list-official');
+            const listComm = document.getElementById('list-community');
             const loader = document.getElementById('loader-list');
-            list.innerHTML = '';
+            const container = document.getElementById('listsContainer');
+
+            listOff.innerHTML = '';
+            listComm.innerHTML = '';
             if (loader) loader.style.display = 'none';
+            if (container) container.style.display = 'block';
 
             const data = snapshot.val();
             if (data) {
@@ -591,7 +609,12 @@
                             </svg>
                         </div>
                     `;
-                    list.appendChild(div);
+
+                    if (b.category === 'community') {
+                        listComm.appendChild(div);
+                    } else {
+                        listOff.appendChild(div);
+                    }
                 });
             }
         });
@@ -652,6 +675,7 @@
         window.saveBuild = async () => {
             const name = document.getElementById('name').value;
             const num = document.getElementById('num').value;
+            const category = document.getElementById('category').value;
             const btn = document.getElementById('saveBtn');
 
             if (!name || !num || !pastedImage) return showToast("Заполни всё и добавь картинку!", true);
@@ -660,7 +684,7 @@
             btn.classList.add('btn-loading');
 
             try {
-                await push(ref(db, 'builds'), { name, num, img: pastedImage, date: Date.now() });
+                await push(ref(db, 'builds'), { name, num, category, img: pastedImage, date: Date.now() });
                 showToast("Билд успешно добавлен!");
                 removePreview();
                 document.getElementById('name').value = '';
