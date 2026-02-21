@@ -8,12 +8,23 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; }
         .content { flex: 1; padding: 40px; }
         .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #333; }
-        .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        input, button { padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; outline: none; }
+        
+        /* Панель админа (скрыта по умолчанию) */
+        #adminPanel { display: none; background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed var(--accent); }
+        .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        /* Логин панель (скрыта по умолчанию) */
+        #loginPanel { display: none; margin-bottom: 20px; background: #252525; padding: 15px; border-radius: 8px; }
+        
+        input, button { padding: 12px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: white; outline: none; width: 100%; box-sizing: border-box; margin-bottom: 5px; }
         input[type="file"] { grid-column: span 2; }
         .btn-add { grid-column: span 2; background: var(--accent); color: #000; font-weight: bold; border: none; cursor: pointer; }
+        .btn-login { background: #4caf50; color: white; font-weight: bold; cursor: pointer; border: none; }
+        .btn-logout { background: #f44336; color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; }
+        
         .item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #333; align-items: center; }
         .link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; }
+        .header-title { text-align: center; color: var(--accent); cursor: pointer; user-select: none; }
         
         .panel { position: fixed; right: -450px; top: 0; width: 400px; height: 100%; background: #1a1a1a; box-shadow: -10px 0 20px rgba(0,0,0,0.5); transition: 0.4s; padding: 25px; z-index: 1000; border-left: 3px solid var(--accent); box-sizing: border-box; overflow-y: auto; }
         .panel.open { right: 0; }
@@ -28,13 +39,25 @@
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="content">
     <div class="container">
-        <h2 style="text-align: center; color: var(--accent);">Deadlock Cloud (No-Card Edition)</h2>
-        <div class="inputs">
-            <input type="text" id="name" placeholder="Герой">
-            <input type="text" id="num" placeholder="№ билда">
-            <input type="file" id="file" accept="image/*">
-            <button class="btn-add" id="saveBtn" onclick="saveBuild()">Сохранить</button>
+        <h2 class="header-title" ondblclick="toggleLogin()">Deadlock Cloud</h2>
+        
+        <div id="loginPanel">
+            <input type="email" id="email" placeholder="Email админа">
+            <input type="password" id="pass" placeholder="Пароль">
+            <button class="btn-login" onclick="login()">Войти</button>
         </div>
+
+        <div id="adminPanel">
+            <h3 style="margin-top:0; color:var(--accent);">Добавить билд</h3>
+            <div class="inputs">
+                <input type="text" id="name" placeholder="Герой">
+                <input type="text" id="num" placeholder="№ билда">
+                <input type="file" id="file" accept="image/*">
+                <button class="btn-add" id="saveBtn" onclick="saveBuild()">Сохранить</button>
+            </div>
+            <button class="btn-logout" onclick="logout()">Выйти из админки</button>
+        </div>
+
         <div id="list"></div>
     </div>
 </div>
@@ -48,8 +71,9 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    // ДОБАВИЛИ МОДУЛИ АВТОРИЗАЦИИ
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // Данные из твоего скриншота
     const firebaseConfig = {
         apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
         authDomain: "site-56644.firebaseapp.com",
@@ -62,8 +86,30 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
 
-    // Подгрузка списка (теперь из Realtime DB)
+    // Следим за тем, вошел админ или нет
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('loginPanel').style.display = 'none';
+        } else {
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+    });
+
+    // Авторизация
+    window.login = () => {
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        signInWithEmailAndPassword(auth, e, p)
+            .then(() => alert("Вы вошли как Админ!"))
+            .catch(err => alert("Ошибка входа: " + err.message));
+    };
+
+    window.logout = () => signOut(auth);
+
+    // Подгрузка списка (Доступна всем)
     onValue(ref(db, 'builds'), (snapshot) => {
         const list = document.getElementById('list');
         list.innerHTML = '';
@@ -78,7 +124,7 @@
         }
     });
 
-    // Сохранение картинки как текста (Base64)
+    // Сохранение (Работает только если авторизован)
     window.saveBuild = async () => {
         const name = document.getElementById('name').value;
         const num = document.getElementById('num').value;
@@ -97,7 +143,7 @@
                 await push(ref(db, 'builds'), { name, num, img: base64Img, date: Date.now() });
                 alert("Готово!");
             } catch (err) {
-                alert("Ошибка! Проверь, включил ли ты Realtime Database в консоли.");
+                alert("Ошибка! У тебя нет прав админа.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Сохранить";
@@ -118,6 +164,11 @@
     function closePanel() {
         document.getElementById('panel').classList.remove('open');
         document.getElementById('overlay').classList.remove('active');
+    }
+    // Показать/скрыть логин по двойному клику
+    function toggleLogin() {
+        const p = document.getElementById('loginPanel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
     }
 </script>
 
