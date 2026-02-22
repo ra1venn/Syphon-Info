@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Предложить билд | Syphon Info</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        :root {
+            --bg: #0b0915;
+            --card: rgba(22, 19, 38, 0.8);
+            --accent: #b789ff;
+            --accent-gradient: linear-gradient(135deg, #b789ff 0%, #7c3aed 100%);
+            --text: #e2e1e9;
+            --text-dim: #94a3b8;
+            --border: rgba(183, 137, 255, 0.15);
+            --purple-deep: #2d1b4e;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .builds-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 650px;
+            background-image: linear-gradient(to bottom, rgba(11, 9, 21, 0) 0%, var(--bg) 100%), url('banner.png');
+            background-size: cover;
+            background-position: center 20%;
+            z-index: 0;
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        .content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 300px 20px 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            will-change: transform;
+            box-sizing: border-box;
+        }
+
+        #scroll-spacer {
+            width: 1px;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(183, 137, 255, 0.05);
+        }
+
+        .header-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        input,
+        textarea {
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 12, 28, 0.6);
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        textarea {
+            grid-column: span 2;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(183, 137, 255, 0.15);
+        }
+
+        .upload-area {
+            grid-column: span 2;
+            padding: 40px 24px;
+            border: 2px dashed rgba(183, 137, 255, 0.3);
+            border-radius: 12px;
+            text-align: center;
+            background: rgba(15, 12, 28, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-dim);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(183, 137, 255, 0.05);
+            color: var(--text);
+        }
+
+        .upload-area i {
+            width: 32px;
+            height: 32px;
+            color: var(--accent);
+        }
+
+        .preview-container {
+            grid-column: span 2;
+            display: none;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .preview-container img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .preview-remove:hover {
+            background: #ef4444;
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-submit {
+            grid-column: span 2;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Fixed Nav */
+        .fixed-nav {
+            position: fixed;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: rgba(22, 19, 38, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            color: var(--accent);
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            top: 20px;
+            left: 20px;
+        }
+
+        .fixed-nav:hover {
+            transform: scale(1.1);
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            width: 100%;
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 9, 21, 0.8);
+            backdrop-filter: blur(10px);
+            margin-top: 60px;
+            box-sizing: border-box;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .footer-content b {
+            color: var(--accent);
+        }
+
+        .social-links {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--accent);
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+        }
+
+        .social-links a:hover {
+            background: var(--accent-gradient);
+            border-color: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .toast {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--purple-deep);
+            color: var(--accent);
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: 0.4s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: rotation 0.6s linear infinite;
+        }
+
+        @keyframes rotation {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="builds.html" class="fixed-nav" title="Назад к билдам">
+        <i data-lucide="arrow-left"></i>
+    </a>
+
+    <div class="builds-banner"></div>
+    <div id="scroll-spacer"></div>
+
+    <div class="content">
+        <div class="container">
+            <h2 class="header-title">Предложить билд</h2>
+            <p class="header-subtitle">Твой билд появится в общем списке после того, как его проверит модерация.</p>
+
+            <div class="inputs">
+                <input type="text" id="heroName" placeholder="Имя Героя (например: Infernus)">
+                <input type="text" id="buildNum" placeholder="ID билда (6 цифр)">
+
+                <textarea id="buildDesc" placeholder="Комментарий к билду (По желанию)"></textarea>
+
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <i data-lucide="image-plus"></i>
+                    <div>
+                        <strong>Нажми, чтобы загрузить скриншот</strong>
+                        <p style="font-size: 0.85rem; margin-top: 5px;">Или просто вставь (Ctrl+V) изображение сюда</p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFile(event)">
+
+                <div class="preview-container" id="previewContainer">
+                    <button class="preview-remove" onclick="removePreview()">×</button>
+                    <img id="imagePreview" src="">
+                </div>
+
+                <button class="btn-submit" id="submitBtn" onclick="submitSuggestion()">Отправить на проверку</button>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-content">
+                <p>&copy; 2026 Syphon Info. Created with 💜 by <b>Ra1venR</b>.</p>
+                <div class="social-links">
+                    <a href="https://donatex.gg/donate/ra1venr" target="_blank">
+                        <i data-lucide="coffee"></i> Поддержать проект
+                    </a>
+                    <a href="https://t.me/raa1ven" target="_blank">
+                        <i data-lucide="send"></i> Связь с автором
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast">Успешно!</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
+            authDomain: "site-56644.firebaseapp.com",
+            projectId: "site-56644",
+            databaseURL: "https://site-56644-default-rtdb.europe-west1.firebasedatabase.app",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentImage = null;
+
+        // Показ иконок
+        lucide.createIcons();
+
+        // Показ тоста
+        function showToast(text, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = text;
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Сжатие картинки
+        async function compressImage(base64) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.src = base64;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if (w > 1280) { h = (1280 / w) * h; w = 1280; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            });
+        }
+
+        // Обработка файла
+        window.handleFile = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                currentImage = await compressImage(ev.target.result);
+                document.getElementById('imagePreview').src = currentImage;
+                document.getElementById('previewContainer').style.display = 'block';
+                document.getElementById('uploadArea').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // Вставка из буфера
+        window.addEventListener('paste', async (e) => {
+            const items = e.clipboardData.items;
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = async (ev) => {
+                        currentImage = await compressImage(ev.target.result);
+                        document.getElementById('imagePreview').src = currentImage;
+                        document.getElementById('previewContainer').style.display = 'block';
+                        document.getElementById('uploadArea').style.display = 'none';
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        });
+
+        window.removePreview = () => {
+            currentImage = null;
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('uploadArea').style.display = 'flex';
+            document.getElementById('fileInput').value = '';
+        };
+
+        window.submitSuggestion = async () => {
+            const name = document.getElementById('heroName').value.trim();
+            const num = document.getElementById('buildNum').value.trim();
+            const desc = document.getElementById('buildDesc').value.trim();
+            const btn = document.getElementById('submitBtn');
+
+            if (!name || !num) return showToast("Заполни имя и ID билда!", true);
+
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
+
+            try {
+                await push(ref(db, 'suggestions'), {
+                    name, num, desc, img: currentImage || "", date: Date.now()
+                });
+                showToast("Билд отправлен!");
+
+                // Очистка
+                document.getElementById('heroName').value = '';
+                document.getElementById('buildNum').value = '';
+                document.getElementById('buildDesc').value = '';
+                removePreview();
+            } catch (err) {
+                showToast("Ошибка при отправке: " + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+            }
+        };
+
+        // Smooth Scroll Logic
+        let cur = 0, tar = 0;
+        function smooth() {
+            tar = window.pageYOffset;
+            cur += (tar - cur) * 0.07;
+            const content = document.querySelector('.content');
+            const spacer = document.getElementById('scroll-spacer');
+            const banner = document.querySelector('.builds-banner');
+            if (content && spacer) {
+                content.style.transform = `translateY(${-cur}px)`;
+                spacer.style.height = content.offsetHeight + 'px';
+                banner.style.transform = `translateY(${-cur * 0.6}px)`;
+            }
+            requestAnimationFrame(smooth);
+        }
+        smooth();
+    </script>
+</body>
+
+</html>

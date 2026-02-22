@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Syphon Builds</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        :root {
+            --bg: #0b0915;
+            --card: rgba(22, 19, 38, 0.8);
+            --accent: #b789ff;
+            --accent-gradient: linear-gradient(135deg, #b789ff 0%, #7c3aed 100%);
+            --text: #e2e1e9;
+            --text-dim: #94a3b8;
+            --border: rgba(183, 137, 255, 0.15);
+            --purple-deep: #2d1b4e;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .builds-banner {
+            position: fixed;
+            /* Отвязываем от прыжков скролла */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 650px;
+            background-image: linear-gradient(to bottom, rgba(11, 9, 21, 0) 0%, var(--bg) 100%), url('banner.png');
+            background-size: cover;
+            background-position: center 20%;
+            z-index: 0;
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        .content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 500px 20px 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            will-change: transform;
+            box-sizing: border-box;
+        }
+
+        #scroll-spacer {
+            width: 1px;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(183, 137, 255, 0.05);
+        }
+
+        .header-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }
+
+        .item {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(183, 137, 255, 0.2);
+        }
+
+        .sub-variants {
+            display: none;
+            padding: 0 20px 16px 20px;
+            border-top: 1px solid rgba(183, 137, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .item.expanded .sub-variants {
+            display: block;
+        }
+
+        .sub-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .sub-item:last-child {
+            border-bottom: none;
+        }
+
+        .arrow-icon {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-dim);
+            transition: transform 0.3s;
+        }
+
+        .item.expanded .arrow-icon {
+            transform: rotate(180deg);
+            fill: var(--accent);
+        }
+
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: flex-end;
+            min-width: 140px;
+            /* Немного меньше, так как нет кнопки удаления */
+        }
+
+        .suggest-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: rgba(183, 137, 255, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 14px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(183, 137, 255, 0.1);
+        }
+
+        .suggest-link:hover {
+            background: var(--accent-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        .suggest-link i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .icon-btn {
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            fill: var(--accent);
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .copyable {
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            padding: 6px 4px;
+            background: rgba(183, 137, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(183, 137, 255, 0.1);
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            min-width: 80px;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .copyable:hover {
+            background: rgba(183, 137, 255, 0.25);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .panel {
+            position: fixed;
+            right: -500px;
+            top: 20px;
+            bottom: 20px;
+            width: 450px;
+            background: rgba(11, 9, 21, 0.95);
+            backdrop-filter: blur(200px);
+            box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 40px;
+            z-index: 1000;
+            border-radius: 30px 0 0 30px;
+            border-left: 1px solid var(--accent);
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .panel.open {
+            right: 0;
+        }
+
+        .panel img {
+            width: 100%;
+            border-radius: 20px;
+            margin-top: 24px;
+            border: 1px solid rgba(183, 137, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            cursor: pointer;
+            float: right;
+            font-size: 32px;
+            color: var(--text-dim);
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: var(--accent);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            z-index: 999;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--purple-deep);
+            color: var(--accent);
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            font-weight: 600;
+            z-index: 2000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Search Hint */
+        .search-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(11, 9, 21, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .search-hint.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+
+        .search-hint span {
+            color: white;
+            margin-left: 8px;
+        }
+
+        .panel-desc {
+            margin-top: 25px;
+            padding: 24px 30px;
+            background: rgba(183, 137, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(183, 137, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            display: none;
+            position: relative;
+            font-style: italic;
+        }
+
+        .panel-desc::before {
+            content: '“';
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.3;
+            font-family: "Georgia", serif;
+            line-height: 1;
+        }
+
+        .panel-desc::after {
+            content: '”';
+            position: absolute;
+            bottom: -15px;
+            right: 15px;
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.3;
+            font-family: "Georgia", serif;
+            line-height: 1;
+        }
+
+        .panel-desc.active {
+            display: block;
+        }
+
+        /* Fullscreen Viewer */
+        .fullscreen-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .fullscreen-viewer.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .fullscreen-viewer img {
+            max-width: 95%;
+            max-height: 95%;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fullscreen-viewer.active img {
+            transform: scale(1);
+        }
+
+        .panel img {
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+
+        .panel img:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        /* Loader styles */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-bottom-color: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 12px;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .header-subtitle a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-bottom: 1px solid rgba(183, 137, 255, 0.2);
+        }
+
+        .header-subtitle a:hover {
+            color: white;
+            border-bottom-color: var(--accent);
+        }
+
+        .header-separator {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 0 auto 40px auto;
+            border-radius: 10px;
+            opacity: 0.5;
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .search-highlight {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
+            font-weight: 700;
+            transition: all 1s ease;
+        }
+
+        .search-highlight.fade-out {
+            color: inherit;
+            text-shadow: none;
+        }
+
+        /* Fixed Navigation Buttons */
+        .fixed-nav {
+            position: fixed;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: rgba(22, 19, 38, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+        }
+
+        .fixed-nav:hover {
+            transform: scale(1.1);
+            background: var(--accent-gradient);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(183, 137, 255, 0.2);
+        }
+
+        .back-home {
+            top: 20px;
+            left: 20px;
+        }
+
+        .scroll-top {
+            bottom: 20px;
+            right: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .fixed-nav i {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Footer */
+        footer {
+            width: 100%;
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 9, 21, 0.8);
+            backdrop-filter: blur(10px);
+            margin-top: 60px;
+            box-sizing: border-box;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .footer-content b {
+            color: var(--accent);
+        }
+
+        .social-links {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .social-links a:hover {
+            color: var(--accent);
+            background: rgba(183, 137, 255, 0.08);
+            border-color: rgba(183, 137, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .social-links i {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="fixed-nav back-home" title="На главную">
+        <i data-lucide="home"></i>
+    </a>
+
+    <button class="fixed-nav scroll-top" id="scrollTopBtn" title="Вверх"
+        onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i data-lucide="arrow-up"></i>
+    </button>
+
+    <div class="builds-banner"></div>
+    <div id="scroll-spacer"></div>
+    <div id="searchHint" class="search-hint">Поиск: <span id="searchText"></span></div>
+    <div class="overlay" id="overlay" onclick="closePanel()"></div>
+    <div class="fullscreen-viewer" id="fullscreenViewer" onclick="closeFullscreen()">
+        <img id="fsImg" src="">
+    </div>
+
+    <div class="content">
+        <!-- Main Content -->
+        <div class="container" id="mainContainer">
+            <h2 class="header-title">Syphon Builds</h2>
+            <p class="header-subtitle">
+                Builds are based on SyphonBullets’ <a href="https://www.youtube.com/@syphonbullets"
+                    target="_blank">guides</a> and <a href="https://www.twitch.tv/syphon_bullets"
+                    target="_blank">streams</a>
+            </p>
+            <div class="header-separator"></div>
+
+            <div style="text-align: center; margin-bottom: 30px;">
+                <a href="suggest.html" class="suggest-link">
+                    <i data-lucide="sparkles"></i> Предложить свой билд
+                </a>
+            </div>
+
+            <div id="loader" class="loader-container">
+                <span class="loader"></span>
+                <span class="loading-text">Загрузка билдов...</span>
+            </div>
+
+            <div id="listsContainer" style="display: none;">
+                <h3 style="color: var(--accent); margin-bottom: 15px; margin-top: 30px;">SyphonBullets' builds</h3>
+                <div id="list-official"></div>
+
+                <h3 style="color: var(--accent); margin-bottom: 15px; margin-top: 40px;">Community/unofficial builds
+                </h3>
+                <div id="list-community"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <p>&copy; 2026 Syphon Info. Created with 💜 by <b>Ra1venR</b>.</p>
+                <div class="social-links">
+                    <a href="https://donatex.gg/donate/ra1venr" target="_blank">
+                        <i data-lucide="coffee"></i> Поддержать проект
+                    </a>
+                    <a href="https://t.me/raa1ven" target="_blank">
+                        <i data-lucide="send"></i> Связь с автором
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="panel" id="panel">
+        <span class="close" onclick="closePanel()">&times;</span>
+        <h2 id="pTitle"></h2>
+        <div id="pImg"></div>
+        <div id="pDesc" class="panel-desc"></div>
+    </div>
+
+    <div id="toast" class="toast">Скопировано!</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTD2qbSkzhVMEDWCA003egR4ftGWEvXOw",
+            authDomain: "site-56644.firebaseapp.com",
+            projectId: "site-56644",
+            databaseURL: "https://site-56644-default-rtdb.europe-west1.firebasedatabase.app",
+            storageBucket: "site-56644.appspot.com",
+            messagingSenderId: "741499230984",
+            appId: "1:741499230984:web:fae10fa2828ba53ff32abd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'builds'), (snapshot) => {
+            const listOff = document.getElementById('list-official');
+            const listComm = document.getElementById('list-community');
+            const loader = document.getElementById('loader');
+            const container = document.getElementById('listsContainer');
+
+            listOff.innerHTML = '';
+            listComm.innerHTML = '';
+            loader.style.display = 'none';
+            container.style.display = 'block';
+
+            const data = snapshot.val();
+            if (data) {
+                // Группировка данных (по имени И категории)
+                const grouped = {};
+                Object.entries(data).forEach(([id, val]) => {
+                    const groupKey = `${val.name.toLowerCase()}_${val.category}`;
+                    if (!grouped[groupKey]) {
+                        grouped[groupKey] = {
+                            id: id,
+                            name: val.name,
+                            category: val.category,
+                            builds: val.variants ? Object.entries(val.variants).map(([vid, v]) => ({ ...v, id: vid })) : [{ num: val.num, img: val.img, desc: val.desc, id: id }]
+                        };
+                    } else if (!val.variants) {
+                        grouped[groupKey].builds.push({ num: val.num, img: val.img, desc: val.desc, id: id });
+                    }
+                });
+
+                const sorted = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
+
+                sorted.forEach(char => {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+
+                    const hasMultiple = char.builds.length > 1;
+
+                    div.innerHTML = `
+                        <div class="item-header">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="char-name" style="font-weight: 600;" data-original="${char.name}">${char.name}</span>
+                                ${hasMultiple ? '<svg class="arrow-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>' : ''}
+                            </div>
+                            <div class="item-actions">
+                                ${!hasMultiple ? `
+                                    <span class="copyable" onclick="event.stopPropagation(); copyToClipboard('${char.builds[0].num}')">${char.builds[0].num}</span>
+                                    <svg class="icon-btn view-btn" viewBox="0 0 24 24">
+                                        <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+                                    </svg>
+                                ` : `<span style="color: var(--text-dim); font-size: 0.8rem; background: rgba(183, 137, 255, 0.1); padding: 4px 8px; border-radius: 6px;">${char.builds.length} билда</span>`}
+                            </div>
+                        </div>
+                    `;
+
+                    const header = div.querySelector('.item-header');
+                    if (hasMultiple) {
+                        header.onclick = () => div.classList.toggle('expanded');
+                        const variantsContainer = document.createElement('div');
+                        variantsContainer.className = 'sub-variants';
+                        char.builds.forEach(b => {
+                            const subItemNode = document.createElement('div');
+                            subItemNode.className = 'sub-item';
+                            subItemNode.innerHTML = `
+                                <span style="font-size: 0.9rem; color: var(--text-dim);">Build ID:</span>
+                                <div class="item-actions">
+                                    <span class="copyable" onclick="copyToClipboard('${b.num}')">${b.num}</span>
+                                    <svg class="icon-btn view-btn" viewBox="0 0 24 24" style="width: 18px;">
+                                        <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+                                    </svg>
+                                </div>
+                            `;
+                            const viewSvg = subItemNode.querySelector('.view-btn');
+                            if (viewSvg) viewSvg.onclick = () => window.openPanel(`${char.name} #${b.num}`, b.img, b.desc || '');
+                            variantsContainer.appendChild(subItemNode);
+                        });
+                        div.appendChild(variantsContainer);
+                    } else {
+                        const b = char.builds[0];
+                        const viewBtn = div.querySelector('.view-btn');
+                        if (viewBtn) {
+                            viewBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                window.openPanel(char.name, b.img, b.desc || '');
+                            };
+                        }
+                    }
+
+                    if (char.category === 'community') {
+                        listComm.appendChild(div);
+                    } else {
+                        listOff.appendChild(div);
+                    }
+                });
+            } else {
+                listOff.innerHTML = '<div style="text-align:center; color: var(--text-dim); padding: 20px;">Билдов пока нет...</div>';
+            }
+        });
+
+        window.openPanel = (name, img, desc) => {
+            document.getElementById('pTitle').innerText = name;
+            document.getElementById('pImg').innerHTML = `<img src="${img}" onclick="openFullscreen('${img}')">`;
+
+            const pDesc = document.getElementById('pDesc');
+            if (desc) {
+                pDesc.innerText = desc;
+                pDesc.classList.add('active');
+            } else {
+                pDesc.classList.remove('active');
+            }
+
+            document.getElementById('panel').classList.add('open');
+            document.getElementById('overlay').classList.add('active');
+        };
+
+        window.openFullscreen = (src) => {
+            const viewer = document.getElementById('fullscreenViewer');
+            document.getElementById('fsImg').src = src;
+            viewer.classList.add('active');
+        };
+
+        window.closeFullscreen = () => {
+            document.getElementById('fullscreenViewer').classList.remove('active');
+        };
+
+        window.closePanel = () => {
+            document.getElementById('panel').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        };
+
+        // Плавный Параллакс и Скролл
+        let currentScroll = 0;
+        let targetScroll = 0;
+        const ease = 0.07;
+
+        function smoothScroll() {
+            targetScroll = window.pageYOffset;
+            currentScroll += (targetScroll - currentScroll) * ease;
+
+            const banner = document.querySelector('.builds-banner');
+            const content = document.querySelector('.content');
+            const spacer = document.getElementById('scroll-spacer');
+
+            if (content && spacer) {
+                // Двигаем весь контент плавно
+                content.style.transform = `translateY(${- currentScroll}px)`;
+                // Обновляем высоту проставки
+                spacer.style.height = content.offsetHeight + 'px';
+            }
+
+            if (banner) {
+                // Баннер двигается с параллаксом
+                banner.style.transform = `translateY(${- currentScroll * 0.6}px)`;
+            }
+            requestAnimationFrame(smoothScroll);
+        }
+        smoothScroll();
+
+        // Быстрый поиск при печати
+        let searchBuffer = "";
+        let searchTimeout;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.ctrlKey || e.altKey || e.metaKey) return;
+
+            if (e.key.length === 1) {
+                clearTimeout(searchTimeout);
+                searchBuffer += e.key.toLowerCase();
+
+                const hint = document.getElementById('searchHint');
+                const text = document.getElementById('searchText');
+                text.innerText = searchBuffer;
+                hint.classList.add('active');
+
+                // Сначала сбрасываем все подсветки
+                document.querySelectorAll('.char-name').forEach(span => {
+                    span.innerHTML = span.getAttribute('data-original');
+                });
+
+                const items = document.querySelectorAll('.item');
+                for (const item of items) {
+                    const span = item.querySelector('.char-name');
+                    const originalName = span.getAttribute('data-original');
+                    if (originalName.toLowerCase().startsWith(searchBuffer)) {
+                        // Подсвечиваем совпадение
+                        const match = originalName.substring(0, searchBuffer.length);
+                        const rest = originalName.substring(searchBuffer.length);
+                        span.innerHTML = `<span class="search-highlight">${match}</span>${rest}`;
+
+                        const rect = item.getBoundingClientRect();
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                        const targetY = rect.top + scrollTop - 200;
+
+                        window.scrollTo({
+                            top: targetY,
+                            behavior: 'smooth'
+                        });
+                        break;
+                    }
+                }
+                searchTimeout = setTimeout(() => {
+                    // Анимация затухания
+                    document.querySelectorAll('.search-highlight').forEach(h => h.classList.add('fade-out'));
+
+                    setTimeout(() => {
+                        searchBuffer = "";
+                        hint.classList.remove('active');
+                        document.querySelectorAll('.char-name').forEach(span => {
+                            span.innerHTML = span.getAttribute('data-original');
+                        });
+                    }, 1000); // Совпадает с CSS
+                }, 1000);
+            }
+        });
+
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 1500);
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+            });
+        };
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Show/Hide Scroll to Top button
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scrollTopBtn');
+            if (window.scrollY > 300) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        });
+    </script>
+</body>
+
+</html>
