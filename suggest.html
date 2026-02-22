@@ -305,9 +305,9 @@
 
         .toast {
             position: fixed;
-            top: 40px;
+            bottom: 40px;
             left: 50%;
-            transform: translateX(-50%) translateY(-20px);
+            transform: translateX(-50%) translateY(20px);
             background: var(--purple-deep);
             color: var(--accent);
             padding: 12px 28px;
@@ -316,8 +316,9 @@
             font-weight: 600;
             z-index: 2000;
             opacity: 0;
-            transition: 0.4s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
         .toast.show {
@@ -404,6 +405,9 @@
                     <a href="https://t.me/raa1ven" target="_blank">
                         <i data-lucide="send"></i> Связь с автором
                     </a>
+                    <a href="javascript:void(0)" onclick="copyToClipboard('smaledogcq@gmail.com')">
+                        <i data-lucide="mail"></i> Контактная почта
+                    </a>
                 </div>
             </div>
         </footer>
@@ -426,6 +430,12 @@
         const db = getDatabase(app);
 
         let currentImage = null;
+
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Скопировано!");
+            });
+        };
 
         // Показ иконок
         lucide.createIcons();

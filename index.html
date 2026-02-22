@@ -72,7 +72,10 @@
             margin-bottom: 20px;
             letter-spacing: -2px;
             filter: drop-shadow(0 0 30px rgba(183, 137, 255, 0.3));
-            animation: fadeInDown 1s ease-out;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: fadeInDown 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            backface-visibility: hidden;
         }
 
         .hero-tagline {
@@ -81,7 +84,10 @@
             max-width: 600px;
             margin-bottom: 60px;
             line-height: 1.6;
-            animation: fadeIn 1.2s ease-out;
+            opacity: 0;
+            animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            animation-delay: 0.2s;
+            backface-visibility: hidden;
         }
 
         /* Grid Layout */
@@ -92,7 +98,11 @@
             width: 100%;
             max-width: 1200px;
             padding: 20px;
-            animation: fadeInUp 1.4s ease-out;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+            animation-delay: 0.4s;
+            backface-visibility: hidden;
         }
 
         .hub-card {
@@ -241,6 +251,30 @@
             height: 18px;
         }
 
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--purple-deep, #2d1b4e);
+            color: var(--accent, #b789ff);
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: 1px solid var(--accent, #b789ff);
+            font-weight: 600;
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* Animations */
         @keyframes fadeInDown {
             from {
@@ -368,11 +402,32 @@
                 <a href="https://t.me/raa1ven" target="_blank">
                     <i data-lucide="send"></i> Связь с автором
                 </a>
+                <a href="javascript:void(0)" onclick="copyToClipboard('smaledogcq@gmail.com')">
+                    <i data-lucide="mail"></i> Контактная почта
+                </a>
             </div>
         </div>
     </footer>
 
     <script>
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.innerText = 'Скопировано!';
+                document.body.appendChild(toast);
+
+                // Trigger reflow for animation
+                toast.offsetHeight;
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 400);
+                }, 1500);
+            });
+        };
+
         // Initialize Lucide icons
         lucide.createIcons();
 
