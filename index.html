@@ -3,443 +3,49 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная | Syphon Info</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Переадресация...</title>
+
+    <!-- 1. Главный способ: Мета-тег refresh (сработает через 0 секунд) -->
+    <meta http-equiv="refresh" content="0; url=https://syphon-info.ru">
+
+    <!-- 2. SEO: Говорим Гуглу и Яндексу, что новый сайт — это оригинал -->
+    <link rel="canonical" href="https://syphon-info.ru">
+
+    <!-- 3. Ускорение: JavaScript редирект (срабатывает мгновенно) -->
+    <script type="text/javascript">
+        window.location.href = "https://syphon-info.ru";
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-
-        :root {
-            --bg: #0b0915;
-            --accent: #b789ff;
-            --accent-gradient: linear-gradient(135deg, #b789ff 0%, #7c3aed 100%);
-            --text: #e2e1e9;
-            --text-dim: #94a3b8;
-            --border: rgba(183, 137, 255, 0.15);
-            --card-bg: rgba(22, 19, 38, 0.4);
-            --card-hover: rgba(183, 137, 255, 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            background: #0b0915;
+            color: #e2e1e9;
+            font-family: sans-serif;
             display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
-
-        /* Banner & Parallax */
-        .main-banner {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(11, 9, 21, 0.4) 0%, var(--bg) 90%), url('banner.png');
-            background-size: cover;
-            background-position: center;
-            z-index: -1;
-            filter: brightness(0.6) saturate(1.2);
-            transition: transform 0.1s ease-out;
-        }
-
-        .hero {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 60px 20px;
+            height: 100vh;
+            margin: 0;
             text-align: center;
         }
 
-        .hero-title {
-            font-size: clamp(3rem, 10vw, 5rem);
-            font-weight: 800;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            letter-spacing: -2px;
-            filter: drop-shadow(0 0 30px rgba(183, 137, 255, 0.3));
-            opacity: 0;
-            transform: translateY(-30px);
-            animation: fadeInDown 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-            backface-visibility: hidden;
-        }
-
-        .hero-tagline {
-            font-size: 1.25rem;
-            color: var(--text-dim);
-            max-width: 600px;
-            margin-bottom: 60px;
-            line-height: 1.6;
-            opacity: 0;
-            animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-            animation-delay: 0.2s;
-            backface-visibility: hidden;
-        }
-
-        /* Grid Layout */
-        .hub-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            width: 100%;
-            max-width: 1200px;
-            padding: 20px;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-            animation-delay: 0.4s;
-            backface-visibility: hidden;
-        }
-
-        .hub-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 40px 30px;
+        a {
+            color: #b789ff;
             text-decoration: none;
-            color: inherit;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            position: relative;
-            overflow: hidden;
+            font-weight: bold;
         }
 
-        .hub-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--accent);
-            background: var(--card-hover);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(183, 137, 255, 0.1);
-        }
-
-        .hub-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            transition: 0.5s;
-        }
-
-        .hub-card:hover::before {
-            left: 100%;
-        }
-
-        .card-icon {
-            width: 70px;
-            height: 70px;
-            background: var(--accent-gradient);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px;
-            box-shadow: 0 10px 20px rgba(183, 137, 255, 0.2);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .hub-card:hover .card-icon {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 15px 30px rgba(183, 137, 255, 0.4);
-        }
-
-        .card-icon svg,
-        .card-icon i {
-            width: 100%;
-            height: 100%;
-            color: white;
-            stroke-width: 2px;
-        }
-
-        .card-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
-        }
-
-        /* Если в иконке картинка, делаем отступы меньше, чтобы она была крупнее */
-        .hub-card .card-icon:has(img) {
-            padding: 8px;
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-
-        .card-desc {
-            font-size: 0.95rem;
-            color: var(--text-dim);
-            line-height: 1.5;
-        }
-
-        /* Footer */
-        footer {
-            padding: 40px 20px;
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(11, 9, 21, 0.8);
-            backdrop-filter: blur(10px);
-            margin-top: auto;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-
-        .footer-content b {
-            color: var(--accent);
-        }
-
-        .social-links {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        .social-links a {
-            color: var(--text-dim);
-            text-decoration: none;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .social-links a:hover {
-            color: var(--accent);
-            background: rgba(183, 137, 255, 0.08);
-            border-color: rgba(183, 137, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .social-links i,
-        .social-links svg,
-        .social-links img {
-            width: 18px;
-            height: 18px;
-        }
-
-        /* Toast Notification */
-        .toast {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: var(--purple-deep, #2d1b4e);
-            color: var(--accent, #b789ff);
-            padding: 12px 28px;
-            border-radius: 50px;
-            border: 1px solid var(--accent, #b789ff);
-            font-weight: 600;
-            z-index: 3000;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* Animations */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hub-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .hero {
-                padding: 40px 20px;
-            }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-    <div class="main-banner" id="parallaxBg"></div>
-
-    <main class="hero">
-        <h1 class="hero-title">Syphon Info</h1>
-        <p class="hero-tagline">Вся информация по Сифону. Билды, гайды и комьюнити в одном месте.</p>
-
-        <div class="hub-grid">
-            <!-- 
-                ПОДСКАЗКА ДЛЯ ТЕБЯ:
-                Чтобы заменить иконку на свою КАРТИНКУ, удали <i data-lucide="..."></i> 
-                и вставь <img src="путь_к_файлу.png"> 
-            -->
-
-            <!-- Builds -->
-            <a href="builds.html" class="hub-card">
-                <div class="card-icon">
-                    <i data-lucide="layout"></i>
-                </div>
-                <div class="card-title">Syphon Builds</div>
-                <div class="card-desc">Сборки на персонажей, созданные по Сифону.</div>
-            </a>
-
-            <!-- YouTube -->
-            <a href="https://www.youtube.com/@syphonbullets" target="_blank" class="hub-card">
-                <div class="card-icon">
-                    <i data-lucide="youtube"></i>
-                </div>
-                <div class="card-title">YouTube Канал</div>
-                <div class="card-desc">Подробные гайды по пребыванию в Нью-Йорке.</div>
-            </a>
-
-            <!-- Twitch -->
-            <a href="https://www.twitch.tv/syphon_bullets" target="_blank" class="hub-card">
-                <div class="card-icon">
-                    <i data-lucide="twitch"></i>
-                </div>
-                <div class="card-title">Twitch Стримы</div>
-                <div class="card-desc">Twitch канал, на котором проходят стримы и весь движ.</div>
-            </a>
-
-            <!-- Нарезки -->
-            <a href="https://www.youtube.com/@syphonbullets.narezki" target="_blank" class="hub-card">
-                <div class="card-icon">
-                    <i data-lucide="clapperboard"></i>
-                </div>
-                <div class="card-title">Нарезки</div>
-                <div class="card-desc">Лучшие моменты со стримов.</div>
-            </a>
-
-            <!-- Discord -->
-            <a href="https://discord.gg/gjN9XmRjMy" target="_blank" class="hub-card">
-                <div class="card-icon">
-                    <img src="discord.png">
-                </div>
-                <div class="card-title">Discord Сервер</div>
-                <div class="card-desc">Наше сообщество для поиска тиммейтов и обсуждения игры.</div>
-            </a>
-
-            <!--Telegram-->
-            <a href="https://t.me/syphonbullets" target="_blank" class="hub-card">
-                <div class="card-icon">
-                    <img src="telegram.png">
-                </div>
-                <div class="card-title">Telegram</div>
-                <div class="card-desc">Telegram канал Сифона с постами и анонсами.</div>
-            </a>
-        </div>
-    </main>
-
-    <footer>
-        <div class="footer-content">
-            <p>&copy; 2026 Syphon Info. Created with 💜 by <b>Ra1venR</b>.</p>
-            <div class="social-links">
-                <a href="https://donatex.gg/donate/ra1venr" target="_blank">
-                    <i data-lucide="coffee"></i> Поддержать проект
-                </a>
-                <a href="https://t.me/raa1ven" target="_blank">
-                    <i data-lucide="send"></i> Связь с автором
-                </a>
-                <a href="javascript:void(0)" onclick="copyToClipboard('smaledogcq@gmail.com')">
-                    <i data-lucide="mail"></i> Контактная почта
-                </a>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        window.copyToClipboard = (text) => {
-            navigator.clipboard.writeText(text).then(() => {
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.innerText = 'Скопировано!';
-                document.body.appendChild(toast);
-
-                // Trigger reflow for animation
-                toast.offsetHeight;
-                toast.classList.add('show');
-
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 400);
-                }, 1500);
-            });
-        };
-
-        // Initialize Lucide icons
-        lucide.createIcons();
-
-        // Smooth mouse move parallax for background
-        const bg = document.getElementById('parallaxBg');
-        window.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth - 0.5) * 20;
-            const y = (e.clientY / window.innerHeight - 0.5) * 20;
-            bg.style.transform = `scale(1.1) translate(${x}px, ${y}px)`;
-        });
-    </script>
+    <div>
+        <p>Сайт переехал!</p>
+        <p>Если вы не были перенаправлены автоматически, <a href="https://syphon-info.ru">нажмите сюда</a>.</p>
+    </div>
 </body>
-
 
 </html>
